@@ -1,11 +1,29 @@
 from flask import Flask
 from flask import request
-from transformers import BlenderbotTokenizer, BlenderbotForConditionalGeneration
-
-tokenizer = BlenderbotTokenizer.from_pretrained("facebook/blenderbot-400M-distill")
-model = BlenderbotForConditionalGeneration.from_pretrained("facebook/blenderbot-400M-distill")
+from parlai.core.agents import create_agent
+from parlai.core.opt import Opt
 
 app = Flask(__name__)
+
+opt = Opt(
+    model_file = 'model',
+    interactive_task = True,
+    task = 'interactive',
+    interactive_mode=True,
+    override = {
+        'fp16' : True,
+        'beam_context_block_ngram' : 3,
+        'beam_block_ngram' : 3,
+        'inference' : 'topk',
+        'topk' : 40,
+        'beam_size' : 10,
+        'beam_min_length' : 10,
+        'temperature' : 1.0
+    }
+)
+
+agent = create_agent(opt, requireModelExists=True)
+agent.opt.log()
 
 
 @app.route("/", methods=["GET", "POST"])
@@ -15,15 +33,13 @@ def send_msg():
 
     utterance = content["data"]
 
-    inputs = tokenizer(utterance, return_tensors="pt")
+    reply = {'episode_done': False, 'text': utterance}
 
-    res = model.generate(**inputs)
+    agent.observe(reply)
 
-    res_dec = str(tokenizer.decode(res[0]))
+    model_res = agent.act()
 
-    res_dec = res_dec[4: len(res_dec) - 4]
-
-    return res_dec
+    return model_res["text"]
 
 
 if __name__ == '__main__':

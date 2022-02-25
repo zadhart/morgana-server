@@ -2,11 +2,9 @@ FROM python:3.8-buster
 
 WORKDIR /app
 
-RUN pip3 install torch torchvision torchaudio
-
-RUN pip install transformers
-
 RUN pip install flask
+
+RUN pip install parlai
 
 COPY . .
 
