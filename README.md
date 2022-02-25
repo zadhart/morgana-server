@@ -1,4 +1,4 @@
-# About:
+# About
 This project is a server for a bot named Morgana that uses a fine tuned model of BlenderBot from ParlAI.
 
 # Model
